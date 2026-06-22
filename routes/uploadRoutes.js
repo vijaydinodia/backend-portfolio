@@ -1,102 +1,82 @@
-import express from "express";
-import multer from "multer";
-import stream from "stream";
-import cloudinary from "../utils/cloudinary.js";
-import { protect } from "../middleware/authMiddleware.js";
-import SiteProfile from "../models/SiteProfile.js";
+import express from 'express';
+import upload, { uploadCV } from '../middleware/uploadMiddleware.js';
+import cloudinary from '../utils/cloudinary.js';
+import { protect } from '../middleware/authMiddleware.js';
+import SiteProfile from '../models/SiteProfile.js';
+import stream from 'stream';
 
 const router = express.Router();
 
-
-// ── Multer Setup for PDF Upload ─────────────────────────────
-const storage = multer.memoryStorage();
-
-const uploadCV = multer({
-  storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed"), false);
-    }
-  },
-});
-
-
-// ── CV Upload Route ─────────────────────────────────────────
-router.post("/cv", protect, uploadCV.single("cv"), async (req, res) => {
+// ── Image Upload ──────────────────────────────────────────────
+router.post('/', protect, upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No PDF file uploaded",
-      });
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: 'vijay_portfolio' },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          return res.status(500).json({ message: 'Error uploading to Cloudinary', error });
+        }
+        res.json({ message: 'Image uploaded successfully', url: result.secure_url, public_id: result.public_id });
+      }
+    );
+
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(req.file.buffer);
+    bufferStream.pipe(uploadStream);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during upload', error: error.message });
+  }
+});
+
+// ── CV / Resume Upload ────────────────────────────────────────
+router.post('/cv', protect, uploadCV.single('cv'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No PDF file uploaded' });
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "vijay_portfolio/cv",
-        resource_type: "raw",
-        public_id: "resume",
-        format: "pdf",
+        folder: 'vijay_portfolio/cv',
+        resource_type: 'image',        // MUST be 'image'. Cloudinary treats PDFs as images natively.
+        public_id: 'resume',           // Base name
+        format: 'pdf',                 // Force the .pdf extension and application/pdf content type
         overwrite: true,
       },
       async (error, result) => {
         if (error) {
-          console.error("Cloudinary Upload Error:", error);
-
-          return res.status(500).json({
-            success: false,
-            message: "Error uploading PDF to Cloudinary",
-            error: error.message,
-          });
+          console.error('Cloudinary CV upload error:', error);
+          return res.status(500).json({ message: 'Error uploading CV to Cloudinary', error });
         }
 
+        // Auto-save the URL to the site profile resumeUrl
         try {
-          // Save resume URL in DB
           let profile = await SiteProfile.findOne();
-
-          if (!profile) {
-            profile = new SiteProfile();
-          }
-
+          if (!profile) profile = new SiteProfile();
           profile.resumeUrl = result.secure_url;
           await profile.save();
-
-          return res.status(200).json({
-            success: true,
-            message: "Resume uploaded successfully",
-            url: result.secure_url,
-            public_id: result.public_id,
-          });
-
-        } catch (dbError) {
-          console.error("Database Error:", dbError.message);
-
-          return res.status(500).json({
-            success: false,
-            message: "PDF uploaded but failed to save URL in database",
-          });
+        } catch (dbErr) {
+          console.error('Failed to save resumeUrl to profile:', dbErr.message);
         }
+
+        res.json({
+          message: 'CV uploaded successfully',
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
       }
     );
 
-    // Convert buffer into stream
     const bufferStream = new stream.PassThrough();
     bufferStream.end(req.file.buffer);
     bufferStream.pipe(uploadStream);
-
   } catch (error) {
-    console.error("Server Error:", error.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error during upload",
-      error: error.message,
-    });
+    res.status(500).json({ message: 'Server error during CV upload', error: error.message });
   }
 });
 
