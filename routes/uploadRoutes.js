@@ -43,8 +43,9 @@ router.post('/cv', protect, uploadCV.single('cv'), (req, res) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: 'vijay_portfolio/cv',
-        resource_type: 'raw',          // Use raw for PDF documents to ensure they are not converted to images
-        public_id: 'resume.pdf',       // Ensure the file has a .pdf extension
+        resource_type: 'image',        // Cloudinary handles PDFs best under the 'image' resource type
+        public_id: 'resume',           // Base name
+        format: 'pdf',                 // Force the .pdf extension and application/pdf content type
         overwrite: true,
       },
       async (error, result) => {
