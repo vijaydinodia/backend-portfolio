@@ -42,15 +42,18 @@ export const updateSkill = async (req, res) => {
 
 export const deleteSkill = async (req, res) => {
   try {
-    const skill = await Skill.findById(req.params.id);
+    const skill = await Skill.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (skill) {
-      skill.isDeleted = true;
-      await skill.save();
       res.json({ message: 'Skill soft deleted successfully' });
     } else {
       res.status(404).json({ message: 'Skill not found' });
     }
   } catch (error) {
+    console.error('deleteSkill error:', error);
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };

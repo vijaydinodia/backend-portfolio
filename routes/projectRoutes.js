@@ -20,9 +20,8 @@ router.route('/')
 router.route('/all').get(protect, getAllProjectsAdmin);
 router.route('/reorder').put(protect, reorderProjects);
 
-router.route('/:idOrSlug').get(getProjectById);
-
 router.route('/:id')
+  .get(getProjectById)
   .put(protect, updateProject)
   .delete(protect, deleteProject);
 

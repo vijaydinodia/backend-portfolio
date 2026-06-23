@@ -42,15 +42,18 @@ export const updateExperience = async (req, res) => {
 
 export const deleteExperience = async (req, res) => {
   try {
-    const experience = await Experience.findById(req.params.id);
+    const experience = await Experience.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (experience) {
-      experience.isDeleted = true;
-      await experience.save();
       res.json({ message: 'Experience soft deleted successfully' });
     } else {
       res.status(404).json({ message: 'Experience not found' });
     }
   } catch (error) {
+    console.error('deleteExperience error:', error);
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };

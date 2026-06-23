@@ -29,14 +29,14 @@ export const getAllProjectsAdmin = async (req, res) => {
 // @access  Public
 export const getProjectById = async (req, res) => {
   try {
-    const { idOrSlug } = req.params;
+    const { id } = req.params;
     let project;
     
     // Check if it's a valid ObjectId
-    if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
-      project = await Project.findById(idOrSlug);
-    } else {
-      project = await Project.findOne({ slug: idOrSlug });
+    if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
+      project = await Project.findById(id);
+    } else if (id) {
+      project = await Project.findOne({ slug: id });
     }
 
     if (project && !project.isDeleted) {
@@ -82,15 +82,18 @@ export const updateProject = async (req, res) => {
 // @access  Private/Admin
 export const deleteProject = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (project) {
-      project.isDeleted = true;
-      await project.save();
       res.json({ message: 'Project soft deleted successfully' });
     } else {
       res.status(404).json({ message: 'Project not found' });
     }
   } catch (error) {
+    console.error('deleteProject error:', error);
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };

@@ -42,15 +42,18 @@ export const updateAchievement = async (req, res) => {
 
 export const deleteAchievement = async (req, res) => {
   try {
-    const achievement = await Achievement.findById(req.params.id);
+    const achievement = await Achievement.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (achievement) {
-      achievement.isDeleted = true;
-      await achievement.save();
       res.json({ message: 'Achievement soft deleted successfully' });
     } else {
       res.status(404).json({ message: 'Achievement not found' });
     }
   } catch (error) {
+    console.error('deleteAchievement error:', error);
     res.status(500).json({ message: 'Server Error', error: error.message });
   }
 };
