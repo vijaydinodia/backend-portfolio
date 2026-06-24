@@ -16,23 +16,23 @@ const siteProfileSchema = new mongoose.Schema(
 
     // About Section
     aboutPara1: { type: String, default: 'I am a passionate Full Stack Engineer specializing in the MERN stack. My focus is on building robust backend architectures and highly interactive, premium frontend experiences.' },
-    aboutPara2: { type: String, default: 'With experience as a MERN Stack Developer Intern, I\'ve solved over 250+ LeetCode problems and actively participated in hackathons.' },
+    aboutPara2: { type: String, default: 'With experience as a MERN Stack Developer Intern, I focus on clean full-stack delivery, strong DSA fundamentals, and hackathon-built problem solving.' },
     highlights: {
       type: [highlightSchema],
       default: [
-        { title: '250+ LeetCode Solved', desc: 'Strong foundation in Data Structures and Algorithms.' },
+        { title: 'LeetCode Practice', desc: 'Strong foundation in Data Structures and Algorithms.' },
         { title: 'Hackathon Enthusiast', desc: 'Building MVPs rapidly under pressure.' },
       ],
     },
 
     // Social Links
     github: { type: String, default: '' },
+    leetcode: { type: String, default: '' },
     linkedin: { type: String, default: '' },
     twitter: { type: String, default: '' },
     email: { type: String, default: '' },
     phone: { type: String, default: '+91 9876543210' },
     location: { type: String, default: 'India' },
-    studentsMentored: { type: Number, default: 0 },
 
     // Profile image
     profileImageUrl: { type: String, default: '' },

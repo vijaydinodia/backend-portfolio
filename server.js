@@ -39,6 +39,17 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/profile', profileRoutes);
 
+// Global Error Handler Middleware (captures Multer, JWT, and other uncaught middleware errors)
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    success: false,
+    message: err.message || 'An unexpected server error occurred',
+    error: err.message || 'Server Error'
+  });
+});
+
 app.get('/', (req, res) => {
   res.send('Vijay Dinodia Portfolio API is running...');
 });

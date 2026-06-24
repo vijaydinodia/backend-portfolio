@@ -1,5 +1,6 @@
 import ContactMessage from '../models/ContactMessage.js';
-import sendContactEmail from '../utils/nodemailer.js';
+import sendContactEmail from '../utils/sendgrid.js';
+import { createAdminMessageMagicLink } from '../utils/adminMessageLink.js';
 
 // @desc    Submit a contact form
 // @route   POST /api/contact
@@ -20,7 +21,8 @@ const submitContactForm = async (req, res) => {
     });
 
     // Send email notification
-    await sendContactEmail(name, email, subject, message);
+    const adminMessageUrl = createAdminMessageMagicLink(req, newMessage._id);
+    await sendContactEmail(newMessage, { adminMessageUrl });
 
     res.status(201).json({ message: 'Message sent successfully', data: newMessage });
   } catch (error) {

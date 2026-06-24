@@ -1,6 +1,7 @@
 import AdminUser from '../models/AdminUser.js';
 import ContactMessage from '../models/ContactMessage.js';
 import generateToken from '../utils/generateToken.js';
+import { getAdminLoginUrl, resolveAdminMessageMagicLink } from '../utils/adminMessageLink.js';
 import bcrypt from 'bcryptjs';
 
 // @desc    Auth admin & get token
@@ -70,6 +71,19 @@ const deleteMessage = async (req, res) => {
   }
 };
 
+// @desc    Resolve a signed message email link and redirect to the admin inbox
+// @route   GET /api/admin/messages/open/:token
+// @access  Public redirect, admin UI still requires login
+const openMessageMagicLink = (req, res) => {
+  try {
+    const redirectUrl = resolveAdminMessageMagicLink(req.params.token);
+    res.redirect(302, redirectUrl);
+  } catch (error) {
+    console.error('Invalid admin message link:', error.message);
+    res.redirect(302, getAdminLoginUrl('invalid-message-link'));
+  }
+};
+
 // @desc    One-time admin setup (seed admin user)
 // @route   POST /api/admin/setup
 // @access  Public (temporary)
@@ -119,4 +133,4 @@ const createAdmin = async (req, res) => {
   }
 };
 
-export { authAdmin, getMessages, markMessageRead, deleteMessage, setupAdmin, createAdmin };
+export { authAdmin, getMessages, markMessageRead, deleteMessage, openMessageMagicLink, setupAdmin, createAdmin };
